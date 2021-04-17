@@ -71,3 +71,27 @@ def test_dims() -> None:
 
 def test_attrs() -> None:
     assert created.attrs == expected.attrs
+
+
+def test_empty() -> None:
+    empty = RGBImage.empty(shape=dict(x=2, y=3))
+    z = np.empty((2, 3), dtype=float)  # type: ignore
+    assert empty == RGBImage.new(z, z, z)
+
+
+def test_zeros() -> None:
+    zeros = RGBImage.zeros(shape=dict(x=2, y=3))
+    z = np.zeros((2, 3), dtype=float)  # type: ignore
+    assert zeros == RGBImage.new(z, z, z)
+
+
+def test_ones() -> None:
+    ones = RGBImage.ones(shape=dict(x=2, y=3))
+    z = np.ones((2, 3), dtype=float)  # type: ignore
+    assert ones == RGBImage.new(z, z, z)
+
+
+def test_full() -> None:
+    full = RGBImage.full(shape=dict(x=2, y=3), fill_value=5.0)
+    z = np.full((2, 3), 5.0, dtype=float)  # type: ignore
+    assert full == RGBImage.new(z, z, z)

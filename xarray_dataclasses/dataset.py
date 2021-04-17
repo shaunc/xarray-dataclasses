@@ -5,15 +5,17 @@ __all__ = ["asdataset", "datasetclass"]
 
 
 # standard library
-from dataclasses import dataclass
+from dataclasses import MISSING, dataclass
 from functools import wraps
 from types import FunctionType
 from typing import (
     Any,
     Callable,
     Generic,
+    List,
     Literal,
     cast,
+    Dict,
     Optional,
     Type,
     Union,
@@ -23,11 +25,21 @@ from typing import (
 
 # third-party packages
 import xarray as xr
-
+import numpy as np
 
 # submodules
-from .common import get_attrs, get_coords, get_data_vars
-from .typing import DS, DataClass, DataClassX, WithClass
+from .common import get_attrs, get_coords, get_data_vars, _gen_fields
+from .typing import (
+    DS,
+    DataArrayLike,
+    DataClass,
+    DataClassX,
+    WithClass,
+    get_dims,
+    get_dtype,
+    is_coord,
+    is_data,
+)
 from .utils import copy_class, extend_class
 
 
@@ -98,9 +110,77 @@ class WithNewX(Generic[DS], WithClass[DS]):
             **kwargs: Any,
         ) -> DS:
             """Create a Dataset instance."""
-            return asdataset(cls(*args, **kwargs))
+            return asdataset(cls(*args, **kwargs))  # type: ignore
 
         cls.new = new  # type: ignore
+
+    @classmethod
+    def empty(cls: Any, shape: Dict[str, int], **kwargs: Any) -> DS:
+        """
+        Create empty Dataset instance.
+        """
+        return cls._create_from_defaults(
+            shape, np.empty, **kwargs  # type: ignore
+        )
+
+    @classmethod
+    def zeros(cls: Any, shape: Dict[str, int], **kwargs: Any) -> DS:
+        """
+        Create empty Dataset instance.
+        """
+        return cls._create_from_defaults(
+            shape, np.zeros, **kwargs  # type: ignore
+        )
+
+    @classmethod
+    def ones(cls: Any, shape: Dict[str, int], **kwargs: Any) -> DS:
+        """
+        Create empty Dataset instance.
+        """
+        return cls._create_from_defaults(
+            shape, np.ones, **kwargs  # type: ignore
+        )
+
+    @classmethod
+    def full(
+        cls: Any, shape: Dict[str, int], fill_value: Any, **kwargs: Any
+    ) -> DS:
+        """
+        Create empty Dataset instance.
+        """
+
+        def create(
+            shape: Dict[str, int], dtype: np.dtype[Any]
+        ) -> np.ndarray:
+            return np.full(shape, fill_value, dtype=dtype)  # type: ignore
+
+        return cls._create_from_defaults(
+            shape, create, **kwargs  # type: ignore
+        )
+
+    @classmethod
+    def _create_from_defaults(
+        cls,
+        shape: Dict[str, int],
+        create_array: Callable[..., np.ndarray],
+        **kwargs: Any,
+    ) -> DS:
+        # fill in data arguments not passed with empty default values
+        # NB: pass attributes default or define in dataclass
+
+        for field, default in _gen_fields(cls):  # type: ignore
+            f_type = cast(Type[DataArrayLike], field.type)  # type: ignore
+            if default is MISSING and (
+                is_data(f_type) or is_coord(f_type)
+            ):
+                dims = get_dims(f_type)
+                field_shape = [shape[dim] for dim in dims]
+                default = create_array(
+                    field_shape, dtype=get_dtype(f_type)
+                )
+            if default is not MISSING:
+                kwargs[field.name] = default
+        return asdataset(cls(**kwargs))  # type: ignore
 
 
 WithNew = WithNewX[xr.Dataset]
