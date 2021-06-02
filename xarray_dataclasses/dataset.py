@@ -15,7 +15,7 @@ from typing import (
     List,
     Literal,
     cast,
-    Dict,
+    Mapping,
     Optional,
     Type,
     Union,
@@ -115,7 +115,7 @@ class WithNewX(Generic[DS], WithClass[DS]):
         cls.new = new  # type: ignore
 
     @classmethod
-    def empty(cls: Any, shape: Dict[str, int], **kwargs: Any) -> DS:
+    def empty(cls: Any, shape: Mapping[str, int], **kwargs: Any) -> DS:
         """
         Create empty Dataset instance.
         """
@@ -124,7 +124,7 @@ class WithNewX(Generic[DS], WithClass[DS]):
         )
 
     @classmethod
-    def zeros(cls: Any, shape: Dict[str, int], **kwargs: Any) -> DS:
+    def zeros(cls: Any, shape: Mapping[str, int], **kwargs: Any) -> DS:
         """
         Create empty Dataset instance.
         """
@@ -133,7 +133,7 @@ class WithNewX(Generic[DS], WithClass[DS]):
         )
 
     @classmethod
-    def ones(cls: Any, shape: Dict[str, int], **kwargs: Any) -> DS:
+    def ones(cls: Any, shape: Mapping[str, int], **kwargs: Any) -> DS:
         """
         Create empty Dataset instance.
         """
@@ -143,14 +143,17 @@ class WithNewX(Generic[DS], WithClass[DS]):
 
     @classmethod
     def full(
-        cls: Any, shape: Dict[str, int], fill_value: Any, **kwargs: Any
+        cls: Any,
+        shape: Mapping[str, int],
+        fill_value: Any,
+        **kwargs: Any,
     ) -> DS:
         """
         Create empty Dataset instance.
         """
 
         def create(
-            shape: Dict[str, int], dtype: np.dtype[Any]
+            shape: Mapping[str, int], dtype: np.dtype[Any]
         ) -> np.ndarray:
             return np.full(shape, fill_value, dtype=dtype)  # type: ignore
 
@@ -161,7 +164,7 @@ class WithNewX(Generic[DS], WithClass[DS]):
     @classmethod
     def _create_from_defaults(
         cls,
-        shape: Dict[str, int],
+        shape: Mapping[str, int],
         create_array: Callable[..., np.ndarray],
         **kwargs: Any,
     ) -> DS:
